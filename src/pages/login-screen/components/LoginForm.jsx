@@ -1,61 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Icon from '../../../components/AppIcon';
 
-const LoginForm = ({ onLogin }) => {
+const LoginForm = () => {
   const navigate = useNavigate();
+  const { signIn, authError, clearError } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Mock credentials for different user types
-  const mockCredentials = [
-    {
-      email: "admin@biblioteca.com",
-      password: "admin123",
-      role: "admin",
-      name: "María González",
-      id: "ADMIN-001"
-    },
-    {
-      email: "bibliotecario@biblioteca.com", 
-      password: "biblio123",
-      role: "librarian",
-      name: "Carlos Rodríguez",
-      id: "USER-001"
-    },
-    {
-      email: "usuario@biblioteca.com",
-      password: "user123", 
-      role: "user",
-      name: "Ana Martínez",
-      id: "USER-002"
-    }
-  ];
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'El correo electrónico es obligatorio';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Formato de correo electrónico inválido';
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = 'La contraseña es obligatoria';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,122 +21,184 @@ const LoginForm = ({ onLogin }) => {
       ...prev,
       [name]: value
     }));
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+    
+    // Clear auth error when user starts typing
+    if (authError) {
+      clearError();
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!formData.email || !formData.password) {
       return;
     }
 
-    setIsLoading(true);
-
+    setLoading(true);
+    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Check credentials
-      const user = mockCredentials.find(
-        cred => cred.email === formData.email && cred.password === formData.password
-      );
-
-      if (user) {
-        // Store user data in localStorage
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('isAuthenticated', 'true');
-        
-        if (onLogin) {
-          onLogin(user);
-        }
-        
+      const result = await signIn(formData.email, formData.password);
+      
+      if (result?.success) {
         navigate('/dashboard');
-      } else {
-        setErrors({
-          general: 'Credenciales inválidas. Verifique su correo y contraseña.\n\nCredenciales de prueba:\n• admin@biblioteca.com / admin123\n• bibliotecario@biblioteca.com / biblio123\n• usuario@biblioteca.com / user123'
-        });
       }
-    } catch (error) {
-      setErrors({
-        general: 'Error del sistema. Intente nuevamente.'
-      });
+      // Error handling is managed by AuthContext
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    alert('Funcionalidad de recuperación de contraseña no implementada en esta demo.\n\nUse las credenciales de prueba proporcionadas.');
+  // Demo credentials helper
+  const fillDemoCredentials = (role) => {
+    if (role === 'admin') {
+      setFormData({
+        email: 'admin@biblioteca.com',
+        password: 'admin123'
+      });
+    } else {
+      setFormData({
+        email: 'carlos.rodriguez@email.com',
+        password: 'user123'
+      });
+    }
+    clearError();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {errors.general && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex items-start">
-            <Icon name="AlertCircle" size={20} className="text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-            <div className="text-sm text-red-700 whitespace-pre-line">
-              {errors.general}
+      {/* Demo Credentials Helper */}
+      <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h3 className="text-sm font-medium text-blue-800 mb-3">Credenciales de Prueba:</h3>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fillDemoCredentials('admin')}
+            className="text-xs"
+          >
+            Admin: admin@biblioteca.com
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fillDemoCredentials('user')}
+            className="text-xs"
+          >
+            Usuario: carlos.rodriguez@email.com
+          </Button>
+        </div>
+      </div>
+
+      {/* Error Display */}
+      {authError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <Icon name="AlertCircle" size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-red-800">{authError}</p>
             </div>
+            <button
+              type="button"
+              onClick={clearError}
+              className="text-red-500 hover:text-red-700"
+            >
+              <Icon name="X" size={16} />
+            </button>
           </div>
         </div>
       )}
 
-      <div className="space-y-4">
+      {/* Email Input */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
+          Correo Electrónico
+        </label>
         <Input
-          label="Correo Electrónico"
           type="email"
+          id="email"
           name="email"
-          placeholder="Ingrese su correo electrónico"
           value={formData.email}
           onChange={handleInputChange}
-          error={errors.email}
+          placeholder="tu.email@ejemplo.com"
           required
-          disabled={isLoading}
-        />
-
-        <Input
-          label="Contraseña"
-          type="password"
-          name="password"
-          placeholder="Ingrese su contraseña"
-          value={formData.password}
-          onChange={handleInputChange}
-          error={errors.password}
-          required
-          disabled={isLoading}
+          disabled={loading}
+          className="w-full"
         />
       </div>
 
-      <Button
-        type="submit"
-        variant="default"
-        fullWidth
-        loading={isLoading}
-        disabled={isLoading}
-        iconName="LogIn"
-        iconPosition="left"
-      >
-        {isLoading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
-      </Button>
+      {/* Password Input */}
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
+          Contraseña
+        </label>
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Tu contraseña"
+            required
+            disabled={loading}
+            className="w-full pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            disabled={loading}
+          >
+            <Icon 
+              name={showPassword ? "EyeOff" : "Eye"} 
+              size={20} 
+              className="text-text-secondary hover:text-text-primary"
+            />
+          </button>
+        </div>
+      </div>
 
-      <div className="text-center">
+      {/* Remember Me & Forgot Password */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="remember"
+            className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
+          />
+          <label htmlFor="remember" className="ml-2 block text-sm text-text-secondary">
+            Recordarme
+          </label>
+        </div>
+        
         <button
           type="button"
-          onClick={handleForgotPassword}
-          className="text-sm text-primary hover:text-primary/80 transition-smooth"
-          disabled={isLoading}
+          className="text-sm text-primary hover:text-primary-dark"
+          disabled={loading}
         >
-          ¿Olvidó su contraseña?
+          ¿Olvidaste tu contraseña?
         </button>
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={loading || !formData.email || !formData.password}
+        iconName={loading ? "Loader2" : "LogIn"}
+        iconPosition="left"
+      >
+        {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+      </Button>
+
+      {/* Additional Info */}
+      <div className="text-center">
+        <p className="text-sm text-text-secondary">
+          Sistema de Biblioteca Digital v1.0
+        </p>
       </div>
     </form>
   );
