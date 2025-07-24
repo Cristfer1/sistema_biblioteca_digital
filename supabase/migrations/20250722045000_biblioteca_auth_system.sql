@@ -5,6 +5,28 @@
 CREATE TYPE public.user_role AS ENUM ('admin', 'user');
 CREATE TYPE public.user_status AS ENUM ('active', 'inactive', 'suspended');
 
+-- 1.a Biblioteca: Custom Types
+CREATE TYPE public.biblioteca_tipo AS ENUM ('Revista', 'Libro', 'Tesis', 'Otros');
+CREATE TYPE public.biblioteca_categoria AS ENUM ('Tecnología', 'Ciencia', 'Educación', 'Otros');
+CREATE TYPE public.biblioteca_almacenamiento AS ENUM ('Virtual', 'Físico');
+
+-- 1.b Biblioteca: Table
+CREATE TABLE public.biblioteca_material (
+    id SERIAL PRIMARY KEY,
+    isbn TEXT NOT NULL UNIQUE,
+    titulo TEXT NOT NULL,
+    autor TEXT NOT NULL,
+    tipo public.biblioteca_tipo NOT NULL,
+    categoria public.biblioteca_categoria NOT NULL,
+    almacenamiento public.biblioteca_almacenamiento NOT NULL,
+    volumen INTEGER,
+    anio_publicacion INTEGER,
+    paginas TEXT,
+    numero_copias INTEGER DEFAULT 1,
+    palabras_clave TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 2. User Profiles Table (Critical intermediary for auth relationships)
 CREATE TABLE public.user_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -191,6 +213,59 @@ BEGIN
          false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null);
 
     -- Note: User profiles will be automatically created by the trigger
+
+    -- Mock data for Biblioteca Materiales
+    INSERT INTO public.biblioteca_material (isbn, titulo, autor, tipo, categoria, almacenamiento, volumen, anio_publicacion, paginas, numero_copias, palabras_clave) VALUES
+    -- 1
+    ('978-1-2345-6789-0', 'Gamified mobile application as a didactic strategy', 'Luana P. Barreto, Valentine Barth et al.', 'Revista', 'Tecnología', 'Virtual', 239, 2024, '437-444', 1, 'Gamification, Mobile application, Pregnant women'),
+    -- 2
+    ('978-1-2345-6790-6', 'Attacking more fun than defending? — Observation of Decision-Making Insights: Assess Value Perception in Job Toilet and App Cycle - Reducing electronic and textile wastes', 'Valentin Barth et al.', 'Revista', 'Tecnología', 'Virtual', 246, 2024, '3148–3157', 1, 'Gamification, Security Awareness, Information Security'),
+    -- 3
+    ('978-1-2345-6791-3', 'AppCycle - Reducing electronic and textile wastes', 'João Teixeira et al.', 'Revista', 'Ciencia', 'Virtual', 242, 2024, '874–880', 1, 'PLS-SEM, Agroforestry Products, Sustainable Consumption, waste, textile waste, APP'),
+    -- 4
+    ('978-1-2345-6792-0', 'Tools to support managerial decision', 'Miroslav Žilka et al.', 'Revista', 'Tecnología', 'Virtual', 239, 2024, '2126–2134', 1, 'Data-driven decision making, SMEs, gamification'),
+    -- 5
+    ('978-1-2345-6793-7', 'Preserving Indonesian Culture in the Digital Age', 'W.P. Aldo Arista', 'Revista', 'Ciencia', 'Virtual', 232, 2024, '416–425', 1, 'Cultural appropriation, Augmented Reality'),
+    -- 6
+    ('978-1-2345-6794-4', 'Game-based Activity Design in Primary School Student Business Computer Simulations in Educational', 'Pumudu A. Ferna', 'Revista', 'Tecnología', 'Virtual', 239, 2024, '365–363', 1, 'Learning style, Game-based learning, Generation Alpha'),
+    -- 7
+    ('978-1-2345-6795-1', 'Mobile Applications and Cloud Computing in Healthcare', 'Milneva-Vlad Dani', 'Revista', 'Tecnología', 'Virtual', 225, 2023, '4006–4014', 1, 'Business simulations, Higher education'),
+    -- 8
+    ('978-1-2345-6796-8', 'Information System Approaches in Cybersecurity', 'Prassbyo Adi Witt', 'Revista', 'Tecnología', 'Virtual', 236, 2024, '1372–1379', 1, 'Mobile applications, Cloud computing, Healthcare'),
+    -- 9
+    ('978-1-2345-6797-5', 'Japanese language learning game "Miryoku" using Google Composer', 'Rio Wibawa et al.', 'Revista', 'Tecnología', 'Virtual', 216, 2023, '547–556', 1, 'Speech Recognition, Japanese Language, Android App'),
+    -- 10
+    ('978-1-2345-6798-2', 'Educational game to raise awareness of illegal animal', 'Jonathan William', 'Revista', 'Ciencia', 'Virtual', 245, 2024, '337–345', 1, 'Animal, Game, Wildlife, Awareness'),
+    -- 11
+    ('978-1-2345-6799-9', 'Applying the Nominal Group Technique for the Corse', 'Ana Filipa Rosa', 'Revista', 'Ciencia', 'Virtual', 219, 2023, '1240–1248', 1, 'Wealth, Conceptual validation, Nominal group technique'),
+    -- 12
+    ('978-1-2345-6800-2', 'Additive applications in entrepreneurship: A systematic review', 'Ulli Abshar', 'Revista', 'Tecnología', 'Virtual', 245, 2024, '409–418', 1, 'Web application, Entrepreneurship, Literature review'),
+    -- 13
+    ('978-1-2345-6801-9', 'Harnessing Data Science for Debt Reduction', 'Caetano Alfafin', 'Revista', 'Ciencia', 'Virtual', 242, 2024, '138–144', 1, 'Debt, Financial Literacy, Structural Equation Model'),
+    -- 14
+    ('978-1-2345-6802-6', 'Mixed Reality for Green Marketing Strategies', 'Konrad Biercew', 'Revista', 'Tecnología', 'Virtual', 246, 2024, '5488–5497', 1, 'Green Marketing, Bibliometric analysis, Mixed Reality'),
+    -- 15
+    ('978-1-2345-6803-3', 'Communication Characteristics in Co-creative Modell', 'Yumiko Nara et al.', 'Revista', 'Ciencia', 'Virtual', 246, 2024, '5478–5487', 1, 'Co-creative modeling, Communication, Policy decision'),
+    -- 16
+    ('978-1-2345-6804-0', 'LM-Assisted Qualitative Data Analysis', 'Aksvarya Adeseyi', 'Revista', 'Tecnología', 'Virtual', 257, 2025, '60–67', 1, 'LLMs, Qualitative Data, Privacy, Gamification'),
+    -- 17
+    ('978-1-2345-6805-7', 'Affordances of MOOP platforms for learning', 'Yanglin Du et al.', 'Revista', 'Tecnología', 'Virtual', 242, 2024, '1394–1401', 1, 'MOOP, Online learning, Collaborative learning'),
+    -- 18
+    ('978-1-2345-6806-4', 'Big Data and Labour Markets', 'Leija Turujja et al.', 'Revista', 'Ciencia', 'Virtual', 217, 2023, '526–535', 1, 'Big Data, Labour Market, Systematic Literature Review'),
+    -- 19
+    ('978-1-2345-6807-1', 'Perspectives and applications of virtual reality in high', 'Danielle Nunes', 'Revista', 'Tecnología', 'Virtual', 238, 2024, '962–967', 1, 'Virtual reality, Higher education, Latin America'),
+    -- 20
+    ('978-1-2345-6808-8', 'Physical and digital worlds: implications and opportunities', 'Fabio De Felice', 'Revista', 'Ciencia', 'Virtual', 217, 2023, '1744–1754', 1, 'Metaverse, Immersive Internet, AR, VR'),
+    -- 21
+    ('978-1-2345-6809-5', 'The use of gamification on cybersecurity awareness', 'Ana Carreiro et al.', 'Revista', 'Tecnología', 'Virtual', 239, 2024, '526–533', 1, 'Gamification, Cybersecurity, Healthcare'),
+    -- 22
+    ('978-1-2345-6810-1', 'Assessing social cognition using virtual reality in the', 'André Freitas et al.', 'Revista', 'Ciencia', 'Virtual', 256, 2025, '1200–1207', 1, 'Social cognition, Virtual reality, Neurosurgery'),
+    -- 23
+    ('978-1-2345-6811-8', 'Emotion-Driven Game Adaptation using Facial Recog', 'Adewiya Niko Sí', 'Revista', 'Tecnología', 'Virtual', 245, 2024, '1083–1091', 1, 'Facial Expression, Heart Rate, Game Difficulty'),
+    -- 24
+    ('978-1-2345-6812-5', 'Innovative teaching methodologies: Keyword-based approach', 'Suppin Claudio', 'Revista', 'Ciencia', 'Virtual', 253, 2025, '2229–2237', 1, 'Teaching methods, Engineering, Digital tools'),
+    -- 25
+    ('978-1-2345-6813-2', 'Ontological model for intelligent assessment in serious', 'Amery Rijba et al.', 'Revista', 'Tecnología', 'Virtual', 246, 2024, '3158–3167', 1, 'Serious Games, AI, Collaborative Learning');
 
 EXCEPTION
     WHEN foreign_key_violation THEN
